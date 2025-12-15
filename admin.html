@@ -527,11 +527,46 @@ body{
 </div>
 
 <script>
-// Check admin session
+// PERBAIKAN: Fungsi untuk mendapatkan base URL
+function getBaseURL() {
+  const path = window.location.pathname;
+  const base = path.substring(0, path.lastIndexOf('/') + 1);
+  return window.location.origin + base;
+}
+
+// PERBAIKAN: Fungsi redirect yang lebih robust
+function redirectTo(page) {
+  try {
+    window.location.href = page;
+  } catch(e) {
+    window.location.href = getBaseURL() + page;
+  }
+}
+
+// PERBAIKAN: Check admin session dengan error handling
 window.addEventListener('DOMContentLoaded', () => {
-  const adminSession = JSON.parse(localStorage.getItem('adminSession'));
-  if(!adminSession){
-    window.location.href = 'LOGIN.html';
+  try {
+    const adminSession = localStorage.getItem('adminSession');
+    if(!adminSession){
+      console.log('No admin session found, redirecting to login...');
+      redirectTo('LOGIN.html');
+      return;
+    }
+    
+    // Parse and validate session
+    const session = JSON.parse(adminSession);
+    if(!session.role || session.role !== 'admin'){
+      console.log('Invalid admin session, redirecting to login...');
+      localStorage.removeItem('adminSession');
+      redirectTo('LOGIN.html');
+      return;
+    }
+    
+    console.log('Admin session valid, loading dashboard...');
+  } catch(error) {
+    console.error('Error checking admin session:', error);
+    localStorage.removeItem('adminSession');
+    redirectTo('LOGIN.html');
   }
 });
 
@@ -545,22 +580,22 @@ let editingMenuIndex = -1;
 
 function initDefaultMenus(){
   const defaultMenus = [
-    {id: 'M1', name: "Nasi Ayam Sambel Ijo", price: 18000, category: "makanan", image: "ayam ijo.jpg"},
-    {id: 'M2', name: "Nasi Lele Sambel Ijo", price: 13000, category: "makanan", image: "lele ijo.jpg"},
-    {id: 'M3', name: "Mie Indomie", price: 10000, category: "makanan", image: "indomie.jpg"},
-    {id: 'M4', name: "Nasi Goreng", price: 15000, category: "makanan", image: "nasgor.jpg"},
-    {id: 'M5', name: "Snack Piattos", price: 20000, category: "makanan", image: "Piattos.jpg"},
-    {id: 'M6', name: "Snack HappyTos", price: 20000, category: "makanan", image: "happytos.jpg"},
-    {id: 'M7', name: "Snack Imoet", price: 3000, category: "makanan", image: "jajanan kecil.jpg"},
-    {id: 'M8', name: "Roti Aoka", price: 2000, category: "makanan", image: "roti.jpg"},
-    {id: 'D1', name: "Es Campur", price: 12000, category: "minuman", image: "Es campur.jpg"},
-    {id: 'D2', name: "Kopi Hitam", price: 5000, category: "minuman", image: "kopi hitam.jpg"},
-    {id: 'D3', name: "Es Teh", price: 5000, category: "minuman", image: "Es the.jpg"},
-    {id: 'D4', name: "Lemon Squash", price: 8000, category: "minuman", image: "lemon.jpg"},
-    {id: 'D5', name: "Aqua 330 ml", price: 5000, category: "minuman", image: "aqua kecil.jpg"},
-    {id: 'D6', name: "Yakult", price: 15000, category: "minuman", image: "yakult.jpg"},
-    {id: 'D7', name: "Bird Nest", price: 8000, category: "minuman", image: "wallet.jpg"},
-    {id: 'D8', name: "Grass Jelly", price: 8000, category: "minuman", image: "Grass Jely.jpg"}
+    {id: 'M1', name: "Nasi Ayam Sambel Ijo", price: 18000, category: "makanan", image: "https://via.placeholder.com/100x100/667eea/ffffff?text=Ayam"},
+    {id: 'M2', name: "Nasi Lele Sambel Ijo", price: 13000, category: "makanan", image: "https://via.placeholder.com/100x100/764ba2/ffffff?text=Lele"},
+    {id: 'M3', name: "Mie Indomie", price: 10000, category: "makanan", image: "https://via.placeholder.com/100x100/f093fb/ffffff?text=Mie"},
+    {id: 'M4', name: "Nasi Goreng", price: 15000, category: "makanan", image: "https://via.placeholder.com/100x100/4facfe/ffffff?text=Nasgor"},
+    {id: 'M5', name: "Snack Piattos", price: 20000, category: "makanan", image: "https://via.placeholder.com/100x100/fa709a/ffffff?text=Snack"},
+    {id: 'M6', name: "Snack HappyTos", price: 20000, category: "makanan", image: "https://via.placeholder.com/100x100/fee140/ffffff?text=Snack"},
+    {id: 'M7', name: "Snack Imoet", price: 3000, category: "makanan", image: "https://via.placeholder.com/100x100/667eea/ffffff?text=Snack"},
+    {id: 'M8', name: "Roti Aoka", price: 2000, category: "makanan", image: "https://via.placeholder.com/100x100/764ba2/ffffff?text=Roti"},
+    {id: 'D1', name: "Es Campur", price: 12000, category: "minuman", image: "https://via.placeholder.com/100x100/f093fb/ffffff?text=Es"},
+    {id: 'D2', name: "Kopi Hitam", price: 5000, category: "minuman", image: "https://via.placeholder.com/100x100/4facfe/ffffff?text=Kopi"},
+    {id: 'D3', name: "Es Teh", price: 5000, category: "minuman", image: "https://via.placeholder.com/100x100/fa709a/ffffff?text=Teh"},
+    {id: 'D4', name: "Lemon Squash", price: 8000, category: "minuman", image: "https://via.placeholder.com/100x100/fee140/ffffff?text=Lemon"},
+    {id: 'D5', name: "Aqua 330 ml", price: 5000, category: "minuman", image: "https://via.placeholder.com/100x100/667eea/ffffff?text=Aqua"},
+    {id: 'D6', name: "Yakult", price: 15000, category: "minuman", image: "https://via.placeholder.com/100x100/764ba2/ffffff?text=Yakult"},
+    {id: 'D7', name: "Bird Nest", price: 8000, category: "minuman", image: "https://via.placeholder.com/100x100/f093fb/ffffff?text=Bird"},
+    {id: 'D8', name: "Grass Jelly", price: 8000, category: "minuman", image: "https://via.placeholder.com/100x100/4facfe/ffffff?text=Jelly"}
   ];
   localStorage.setItem('menus', JSON.stringify(defaultMenus));
   return defaultMenus;
@@ -717,263 +752,3 @@ function renderMenus(){
         <p>Belum ada menu yang ditambahkan</p>
       </div>
     `;
-    return;
-  }
-  
-  list.innerHTML = filteredMenus.map((m, i) => {
-    const originalIndex = menus.indexOf(m);
-    return `
-      <div class="menu-card">
-        <div class="d-flex align-items-center">
-          <img src="${m.image}" alt="${m.name}" class="menu-image" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
-          <div class="menu-info">
-            <div class="menu-name">${m.name}</div>
-            <div class="menu-price">Rp ${m.price.toLocaleString('id-ID')}</div>
-            <span class="menu-category">${m.category === 'makanan' ? '🍛 Makanan' : '🥤 Minuman'}</span>
-          </div>
-        </div>
-        <div class="d-flex gap-2 mt-3">
-          <button class="btn btn-sm btn-primary" onclick="editMenu(${originalIndex})">✏️ Edit</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="hapusMenu(${originalIndex})">🗑️ Hapus</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function switchTab(tab){
-  currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  document.getElementById('ordersTab').style.display = tab === 'orders' ? 'block' : 'none';
-  document.getElementById('menuTab').style.display = tab === 'menu' ? 'block' : 'none';
-  document.getElementById('usersTab').style.display = tab === 'users' ? 'block' : 'none';
-}
-
-function filterOrders(status){
-  currentFilter = status;
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  renderOrders();
-}
-
-function filterMenu(category){
-  currentMenuFilter = category;
-  document.querySelectorAll('#menuTab .filter-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  renderMenus();
-}
-
-function openAddMenuModal(){
-  editingMenuIndex = -1;
-  document.getElementById('modalTitle').innerText = 'Tambah Menu Baru';
-  document.getElementById('menuForm').reset();
-  document.getElementById('menuModal').style.display = 'block';
-}
-
-function editMenu(index){
-  editingMenuIndex = index;
-  const menu = menus[index];
-  document.getElementById('modalTitle').innerText = 'Edit Menu';
-  document.getElementById('menuName').value = menu.name;
-  document.getElementById('menuPrice').value = menu.price;
-  document.getElementById('menuCategory').value = menu.category;
-  document.getElementById('menuImage').value = menu.image;
-  
-  // Show current image preview
-  if(menu.image){
-    document.getElementById('imagePreview').style.display = 'block';
-    document.getElementById('previewImg').src = menu.image;
-  }
-  
-  document.getElementById('menuModal').style.display = 'block';
-}
-
-function closeMenuModal(){
-  document.getElementById('menuModal').style.display = 'none';
-  document.getElementById('menuForm').reset();
-  document.getElementById('imagePreview').style.display = 'none';
-  document.getElementById('menuImageFile').value = '';
-  editingMenuIndex = -1;
-}
-
-function previewImage(event){
-  const file = event.target.files[0];
-  
-  if(file){
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if(!validTypes.includes(file.type)){
-      alert('Format file tidak valid! Gunakan JPG, PNG, atau GIF');
-      event.target.value = '';
-      return;
-    }
-    
-    // Validate file size (max 2MB)
-    if(file.size > 2 * 1024 * 1024){
-      alert('Ukuran file terlalu besar! Maksimal 2MB');
-      event.target.value = '';
-      return;
-    }
-    
-    // Read and preview image
-    const reader = new FileReader();
-    
-    reader.onload = function(e){
-      document.getElementById('imagePreview').style.display = 'block';
-      document.getElementById('previewImg').src = e.target.result;
-      document.getElementById('menuImage').value = e.target.result;
-    };
-    
-    reader.readAsDataURL(file);
-  }
-}
-
-function saveMenu(e){
-  e.preventDefault();
-  
-  const imageData = document.getElementById('menuImage').value;
-  
-  if(!imageData){
-    alert('Mohon pilih gambar menu!');
-    return;
-  }
-  
-  const menuData = {
-    id: editingMenuIndex === -1 ? 'MENU-' + Date.now() : menus[editingMenuIndex].id,
-    name: document.getElementById('menuName').value.trim(),
-    price: parseInt(document.getElementById('menuPrice').value),
-    category: document.getElementById('menuCategory').value,
-    image: imageData
-  };
-  
-  if(editingMenuIndex === -1){
-    menus.push(menuData);
-    showNotification('Menu berhasil ditambahkan!', 'success');
-  } else {
-    menus[editingMenuIndex] = menuData;
-    showNotification('Menu berhasil diupdate!', 'success');
-  }
-  
-  localStorage.setItem('menus', JSON.stringify(menus));
-  closeMenuModal();
-  renderMenus();
-}
-
-function hapusMenu(index){
-  if(confirm('Yakin ingin menghapus menu ini?')){
-    menus.splice(index, 1);
-    localStorage.setItem('menus', JSON.stringify(menus));
-    renderMenus();
-    showNotification('Menu berhasil dihapus', 'info');
-  }
-}
-
-function konfirmasi(i){
-  orders[i].status = 'Diproses';
-  simpan();
-  showNotification('Pesanan berhasil dikonfirmasi!', 'success');
-}
-
-function selesai(i){
-  orders[i].status = 'Selesai';
-  simpan();
-  showNotification('Pesanan telah selesai!', 'success');
-}
-
-function hapusOrder(i){
-  if(confirm('Yakin ingin menghapus pesanan ini?')){
-    orders.splice(i, 1);
-    simpan();
-    showNotification('Pesanan berhasil dihapus', 'info');
-  }
-}
-
-function hapusUser(i){
-  if(confirm('Yakin ingin menghapus user ini?')){
-    users.splice(i, 1);
-    localStorage.setItem('users', JSON.stringify(users));
-    render();
-    showNotification('User berhasil dihapus', 'info');
-  }
-}
-
-function clearAllOrders(){
-  if(confirm('⚠️ PERINGATAN!\n\nHapus SEMUA data pesanan dan user?\n\nTindakan ini tidak dapat dibatalkan!')){
-    orders = [];
-    users = [];
-    localStorage.setItem('orders', JSON.stringify(orders));
-    localStorage.setItem('users', JSON.stringify(users));
-    render();
-    showNotification('Semua data telah dihapus', 'warning');
-  }
-}
-
-function logoutAdmin(){
-  if(confirm('Yakin ingin logout dari admin?')){
-    localStorage.removeItem('adminSession');
-    showNotification('Logout berhasil', 'info');
-    setTimeout(() => {
-      window.location.href = 'LOGIN.html';
-    }, 500);
-  }
-}
-
-function simpan(){
-  localStorage.setItem('orders', JSON.stringify(orders));
-  render();
-}
-
-function showNotification(message, type){
-  const colors = {
-    success: '#198754',
-    info: '#0dcaf0',
-    warning: '#ffc107'
-  };
-  
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${colors[type] || '#198754'};
-    color: white;
-    padding: 15px 25px;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,.2);
-    z-index: 9999;
-    animation: slideIn 0.3s ease;
-  `;
-  notification.textContent = message;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.style.animation = 'slideOut 0.3s ease';
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
-}
-
-// Close modal when clicking outside
-window.onclick = function(event){
-  const modal = document.getElementById('menuModal');
-  if(event.target == modal){
-    closeMenuModal();
-  }
-}
-
-// Initial render
-render();
-
-// Auto-refresh every 30 seconds
-setInterval(() => {
-  orders = JSON.parse(localStorage.getItem('orders')) || [];
-  users = JSON.parse(localStorage.getItem('users')) || [];
-  menus = JSON.parse(localStorage.getItem('menus')) || [];
-  render();
-}, 30000);
-</script>
-
-</body>
-</html>
