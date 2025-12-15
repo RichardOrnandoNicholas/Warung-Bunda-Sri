@@ -337,15 +337,37 @@ h2{
 <script>
 let currentMode = 'user';
 
+// PERBAIKAN: Fungsi untuk mendapatkan base URL
+function getBaseURL() {
+  const path = window.location.pathname;
+  const base = path.substring(0, path.lastIndexOf('/') + 1);
+  return window.location.origin + base;
+}
+
+// PERBAIKAN: Fungsi redirect yang lebih robust
+function redirectTo(page) {
+  try {
+    // Coba redirect langsung
+    window.location.href = page;
+  } catch(e) {
+    // Fallback menggunakan base URL
+    window.location.href = getBaseURL() + page;
+  }
+}
+
 // Check if already logged in
 window.addEventListener('DOMContentLoaded', () => {
-  const currentUser = localStorage.getItem('currentUser');
-  const adminSession = localStorage.getItem('adminSession');
-  
-  if(adminSession){
-    window.location.href = 'ADMIN.html';
-  } else if(currentUser){
-    window.location.href = 'HOME.html';
+  try {
+    const currentUser = localStorage.getItem('currentUser');
+    const adminSession = localStorage.getItem('adminSession');
+    
+    if(adminSession){
+      redirectTo('ADMIN.html');
+    } else if(currentUser){
+      redirectTo('HOME.html');
+    }
+  } catch(error) {
+    console.error('Error checking login status:', error);
   }
 });
 
@@ -394,26 +416,33 @@ function handleUserLogin(e){
   btnLogin.disabled = true;
   
   setTimeout(() => {
-    // Save user data
-    const userData = {
-      nama: nama,
-      telepon: telepon,
-      loginTime: new Date().toLocaleString('id-ID'),
-      status: 'active'
-    };
-    
-    // Save to localStorage
-    localStorage.setItem('currentUser', JSON.stringify(userData));
-    
-    // Save to users history
-    saveToUsersHistory(userData);
-    
-    // Show success and redirect
-    showAlert('Login berhasil! Selamat datang, ' + nama, 'success');
-    
-    setTimeout(() => {
-      window.location.href = 'HOME.html';
-    }, 1000);
+    try {
+      // Save user data
+      const userData = {
+        nama: nama,
+        telepon: telepon,
+        loginTime: new Date().toLocaleString('id-ID'),
+        status: 'active'
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      // Save to users history
+      saveToUsersHistory(userData);
+      
+      // Show success and redirect
+      showAlert('Login berhasil! Selamat datang, ' + nama, 'success');
+      
+      setTimeout(() => {
+        redirectTo('HOME.html');
+      }, 1000);
+    } catch(error) {
+      console.error('Login error:', error);
+      showAlert('Terjadi kesalahan saat login. Silakan coba lagi.', 'danger');
+      btnLogin.innerHTML = 'Masuk';
+      btnLogin.disabled = false;
+    }
   }, 1000);
 }
 
@@ -433,23 +462,30 @@ function handleAdminLogin(e){
   btnLogin.disabled = true;
   
   setTimeout(() => {
-    if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD){
-      // Save admin session
-      const adminData = {
-        username: username,
-        loginTime: new Date().toLocaleString('id-ID'),
-        role: 'admin'
-      };
-      
-      localStorage.setItem('adminSession', JSON.stringify(adminData));
-      
-      showAlert('Login admin berhasil! Mengalihkan...', 'success');
-      
-      setTimeout(() => {
-        window.location.href = 'ADMIN.html';
-      }, 1000);
-    } else {
-      showAlert('Username atau password salah!', 'danger');
+    try {
+      if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD){
+        // Save admin session
+        const adminData = {
+          username: username,
+          loginTime: new Date().toLocaleString('id-ID'),
+          role: 'admin'
+        };
+        
+        localStorage.setItem('adminSession', JSON.stringify(adminData));
+        
+        showAlert('Login admin berhasil! Mengalihkan...', 'success');
+        
+        setTimeout(() => {
+          redirectTo('ADMIN.html');
+        }, 1000);
+      } else {
+        showAlert('Username atau password salah!', 'danger');
+        btnLogin.innerHTML = '🔐 Login Admin';
+        btnLogin.disabled = false;
+      }
+    } catch(error) {
+      console.error('Admin login error:', error);
+      showAlert('Terjadi kesalahan saat login. Silakan coba lagi.', 'danger');
       btnLogin.innerHTML = '🔐 Login Admin';
       btnLogin.disabled = false;
     }
@@ -457,47 +493,56 @@ function handleAdminLogin(e){
 }
 
 function saveToUsersHistory(userData){
-  const users = JSON.parse(localStorage.getItem('users')) || [];
-  
-  // Check if user exists
-  const existingUserIndex = users.findIndex(u => u.telepon === userData.telepon);
-  
-  if(existingUserIndex !== -1){
-    // Update existing user
-    users[existingUserIndex] = {
-      ...users[existingUserIndex],
-      nama: userData.nama,
-      lastLogin: userData.loginTime,
-      loginCount: (users[existingUserIndex].loginCount || 0) + 1
-    };
-  } else {
-    // Add new user
-    users.push({
-      ...userData,
-      id: 'USER-' + Date.now(),
-      loginCount: 1,
-      registeredAt: userData.loginTime
-    });
+  try {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    // Check if user exists
+    const existingUserIndex = users.findIndex(u => u.telepon === userData.telepon);
+    
+    if(existingUserIndex !== -1){
+      // Update existing user
+      users[existingUserIndex] = {
+        ...users[existingUserIndex],
+        nama: userData.nama,
+        lastLogin: userData.loginTime,
+        loginCount: (users[existingUserIndex].loginCount || 0) + 1
+      };
+    } else {
+      // Add new user
+      users.push({
+        ...userData,
+        id: 'USER-' + Date.now(),
+        loginCount: 1,
+        registeredAt: userData.loginTime
+      });
+    }
+    
+    localStorage.setItem('users', JSON.stringify(users));
+  } catch(error) {
+    console.error('Error saving user history:', error);
   }
-  
-  localStorage.setItem('users', JSON.stringify(users));
 }
 
 function masukSebagaiTamu(){
-  const guestData = {
-    nama: 'Tamu',
-    telepon: '-',
-    loginTime: new Date().toLocaleString('id-ID'),
-    status: 'guest'
-  };
-  
-  localStorage.setItem('currentUser', JSON.stringify(guestData));
-  
-  showAlert('Melanjutkan sebagai tamu...', 'info');
-  
-  setTimeout(() => {
-    window.location.href = 'HOME.html';
-  }, 800);
+  try {
+    const guestData = {
+      nama: 'Tamu',
+      telepon: '-',
+      loginTime: new Date().toLocaleString('id-ID'),
+      status: 'guest'
+    };
+    
+    localStorage.setItem('currentUser', JSON.stringify(guestData));
+    
+    showAlert('Melanjutkan sebagai tamu...', 'info');
+    
+    setTimeout(() => {
+      redirectTo('HOME.html');
+    }, 800);
+  } catch(error) {
+    console.error('Guest login error:', error);
+    showAlert('Terjadi kesalahan. Silakan coba lagi.', 'danger');
+  }
 }
 
 function showAlert(message, type){
